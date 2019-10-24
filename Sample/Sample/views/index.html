@@ -1,0 +1,148 @@
+﻿<!DOCTYPE html>
+
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8" />
+    <link href="bootstrap.css" rel="stylesheet" />
+    <script src="vue.js"></script>
+    <script src="axios.js"></script>
+    <script src="beetlex4axios.js"></script>
+    <title></title>
+    <style>
+        .nav > li > a {
+            position: relative;
+            display: block;
+            padding: 5px 10px;
+        }
+    </style>
+</head>
+<body>
+    <header class="navbar navbar-static-top bs-docs-nav" id="top" style="margin-bottom:10px;">
+        <div class="container">
+            <div class="navbar-header">
+                <button class="navbar-toggle collapsed" type="button" data-toggle="collapse" data-target="#bs-navbar" aria-controls="bs-navbar" aria-expanded="false">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a href="https://github.com/ikende" target="_blank" class="navbar-brand">vue/beetlex webapi samples</a>
+            </div>
+            <nav id="bs-navbar" class="collapse navbar-collapse">
+
+            </nav>
+        </div>
+    </header>
+    <div class="container" id="page">
+        <div class="row">
+            <ul class="nav nav-tabs">
+                <li role="presentation" :class="select=='login'?'active':''"><a href="javascript:void(0)" @click="select='login'">Login</a></li>
+                <li role="presentation" :class="select=='add'?'active':''"><a href="javascript:void(0)" @click="select='add'">Add</a></li>
+                <li role="presentation" :class="select=='list'?'active':''"><a href="javascript:void(0)" @click="select='list'">List</a></li>
+            </ul>
+            <div :style="{display:(select=='login'?'':'none')}">
+                <br />
+                <form class="form-horizontal">
+                    <div class="form-group  form-group-sm">
+                        <label for="inputEmail3" class="col-sm-2 control-label">Name</label>
+                        <div class="col-sm-10">
+                            <input type="email" class="form-control" v-model="login.data.name" placeholder="name">
+                        </div>
+                    </div>
+                    <div class="form-group  form-group-sm">
+                        <label for="inputPassword3" class="col-sm-2 control-label">Password</label>
+                        <div class="col-sm-10">
+                            <input type="password" class="form-control" v-model="login.data.pwd" placeholder="Password">
+                        </div>
+                    </div>
+
+                    <div class="form-group  form-group-sm">
+                        <div class="col-sm-offset-2 col-sm-10">
+                            <button type="button" @click="login.post()" class="btn btn-default">Sign in</button>
+                            <label v-if="login.result==true" style="color:forestgreen;">Success</label>
+                            <label v-if="login.result==false" style="color:red;">Wrong password</label>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div :style="{display:(select=='add'?'':'none')}">
+                <br />
+                <form class="form-horizontal">
+                    <div class="form-group form-group-sm">
+                        <label for="inputEmail3" class="col-sm-2 control-label">FirstName</label>
+                        <div class="col-sm-10">
+                            <input type="text" v-model="addEmployee.data.FirstName" class="form-control">
+                        </div>
+                    </div>
+                    <div class="form-group form-group-sm">
+                        <label for="inputPassword3" class="col-sm-2 control-label">LastName</label>
+                        <div class="col-sm-10">
+                            <input type="text" v-model="addEmployee.data.LastName" class="form-control">
+                        </div>
+                    </div>
+                    <div class="form-group form-group-sm">
+                        <label for="inputPassword3" class="col-sm-2 control-label">City</label>
+                        <div class="col-sm-10">
+                            <input type="text" v-model="addEmployee.data.City" class="form-control">
+                        </div>
+                    </div>
+                    <div class="form-group form-group-sm">
+                        <label for="inputPassword3" class="col-sm-2 control-label">Address</label>
+                        <div class="col-sm-10">
+                            <input type="text" v-model="addEmployee.data.Address" class="form-control">
+                        </div>
+                    </div>
+                    <div class="form-group form-group-sm">
+                        <div class="col-sm-offset-2 col-sm-10">
+                            <button type="button" @click="addEmployee.post()" class="btn btn-default">Add</button>
+                        </div>
+                    </div>
+                    <div class="form-group form-group-sm">
+                        {{addEmployee.result}}
+                    </div>
+                </form>
+            </div>
+            <div :style="{display:(select=='list'?'':'none')}">
+                <br />
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>First Name</th>
+                            <th>Last Name</th>
+                            <th>City</th>
+                            <th>Address</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="(item,i) in listEmployee.result">
+                            <th scope="row">{{i}}</th>
+                            <td>{{item.FirstName}}</td>
+                            <td>{{item.LastName}}</td>
+                            <td>{{item.City}}</td>
+                            <td>{{item.Address}}</td>
+                        </tr>           
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+    <script>
+        beetlex.useWebsocket(); 
+        var logincmd = new beetlexAction("/Login", { name: '', pwd: '' });
+        var addEmployeecmd = new beetlexAction("/AddEmployee", { FirstName: '', LastName: '', City: '', Address: '' });
+        var listEmployeecmd = new beetlexAction("/ListEmployees");
+        var page = new Vue({
+            el: '#page',
+            data: {
+                select: 'login',
+                login: logincmd,
+                addEmployee: addEmployeecmd,
+                listEmployee: listEmployeecmd,
+            }
+        });
+        page.listEmployee.get();
+    </script>
+</body>
+</html>

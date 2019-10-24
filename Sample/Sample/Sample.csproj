@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp2.2</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="views\新文件夹\**" />
+    <EmbeddedResource Remove="views\新文件夹\**" />
+    <None Remove="views\新文件夹\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="BeetleX.FastHttpApi" Version="1.7.1" />
+    <PackageReference Include="BeetleX.FastHttpApi.Hosting" Version="0.8.8" />
+    <PackageReference Include="Northwind.Data" Version="1.2.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="views\beetlex4axios.js">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+</Project>
