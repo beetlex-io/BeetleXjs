@@ -38,7 +38,8 @@
             <ul class="nav nav-tabs">
                 <li role="presentation" :class="select=='login'?'active':''"><a href="javascript:void(0)" @click="select='login'">Login</a></li>
                 <li role="presentation" :class="select=='add'?'active':''"><a href="javascript:void(0)" @click="select='add'">Add</a></li>
-                <li role="presentation" :class="select=='list'?'active':''"><a href="javascript:void(0)" @click="select='list'">List</a></li>
+                <li role="presentation" :class="select=='list'?'active':''"><a href="javascript:void(0)" @click="select='list'">employees</a></li>
+                <li role="presentation" :class="select=='orders'?'active':''"><a href="javascript:void(0)" @click="select='orders'">orders</a></li>
             </ul>
             <div :style="{display:(select=='login'?'':'none')}">
                 <br />
@@ -121,7 +122,48 @@
                             <td>{{item.LastName}}</td>
                             <td>{{item.City}}</td>
                             <td>{{item.Address}}</td>
-                        </tr>           
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div :style="{display:(select=='orders'?'':'none')}">
+                <br />
+                <form class="form-inline">
+                    <div class="form-group form-group-sm">
+                        <label>Employee</label>
+                        <select v-model="listOrders.data.employeeid" class="form-control">
+                            <option value="0">All</option>
+                            <option v-for="item in employeeSelects.result" :value="item.EmployeeID">{{item.Name}}</option>
+                        </select>
+                    </div>
+                    <div class="form-group form-group-sm">
+                        <label>Customer</label>
+                        <select v-model="listOrders.data.customerid" class="form-control">
+                            <option value="">All</option>
+                            <option v-for="item in customerSelects.result" :value="item.CustomerID">{{item.Name}}</option>
+                        </select>
+                    </div>
+                    <button type="button" @click="listOrders.get()" class="btn btn-default">search</button>
+                </form>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>OrderID</th>
+                            <th>OrderDate</th>
+                            <th>ShipName</th>
+                            <th>ShipAddress</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="(item,i) in listOrders.result">
+                            <th scope="row">{{i}}</th>
+                            <td>{{item.OrderID}}</td>
+                            <td>{{item.OrderDate}}</td>
+                            <td>{{item.ShipName}}</td>
+                            <td>{{item.ShipAddress}}</td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
@@ -129,10 +171,14 @@
 
     </div>
     <script>
-        beetlex.useWebsocket(); 
+        beetlex.useWebsocket();
         var logincmd = new beetlexAction("/Login", { name: '', pwd: '' });
+        logincmd.callback = function (data) { };
         var addEmployeecmd = new beetlexAction("/AddEmployee", { FirstName: '', LastName: '', City: '', Address: '' });
         var listEmployeecmd = new beetlexAction("/ListEmployees");
+        var customersSelectcmd = new beetlexAction("/CustomersSelect");
+        var employeesSelectcmd = new beetlexAction("/EmployeesSelect");
+        var listOrderscmd = new beetlexAction("/ListOrders", { employeeid: 0, customerid: '' }, []);
         var page = new Vue({
             el: '#page',
             data: {
@@ -140,9 +186,15 @@
                 login: logincmd,
                 addEmployee: addEmployeecmd,
                 listEmployee: listEmployeecmd,
+                customerSelects: customersSelectcmd,
+                employeeSelects: employeesSelectcmd,
+                listOrders: listOrderscmd
             }
         });
         page.listEmployee.get();
+        page.listOrders.get();
+        page.customerSelects.get();
+        page.employeeSelects.get();
     </script>
 </body>
 </html>

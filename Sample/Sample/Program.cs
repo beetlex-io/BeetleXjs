@@ -3,6 +3,7 @@ using BeetleX.FastHttpApi.Hosting;
 using Microsoft.Extensions.Hosting;
 using System;
 using Northwind.Data;
+using System.Linq;
 namespace Sample
 {
     [BeetleX.FastHttpApi.Controller]
@@ -32,7 +33,27 @@ namespace Sample
             return false;
         }
 
+        public object CustomersSelect()
+        {
+            return from a in DataHelper.Defalut.Customers
+                   select new
+                   {
+                       a.CustomerID,
+                       Name = $"{a.CompanyName}"
+                   };
+        }
 
+        public object ListOrders(int employeeid, string customerid)
+        {
+            return from a in DataHelper.Defalut.Orders
+                   where (employeeid == 0 || a.EmployeeID == employeeid) && (string.IsNullOrEmpty(customerid) || a.CustomerID == customerid)
+                   select a;
+        }
+
+        public object EmployeesSelect()
+        {
+            return from a in DataHelper.Defalut.Employees select new { a.EmployeeID, Name = $"{a.FirstName} {a.LastName}" };
+        }
 
         public object ListEmployees()
         {
