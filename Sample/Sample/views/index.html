@@ -171,24 +171,33 @@
 
     </div>
     <script>
-        beetlex.useWebsocket();
-        var logincmd = new beetlexAction("/Login", { name: '', pwd: '' });
-        logincmd.callback = function (data) { };
-        var addEmployeecmd = new beetlexAction("/AddEmployee", { FirstName: '', LastName: '', City: '', Address: '' });
-        var listEmployeecmd = new beetlexAction("/ListEmployees");
-        var customersSelectcmd = new beetlexAction("/CustomersSelect");
-        var employeesSelectcmd = new beetlexAction("/EmployeesSelect");
-        var listOrderscmd = new beetlexAction("/ListOrders", { employeeid: 0, customerid: '' }, []);
+        var login = new beetlexAction("/Login", { name: '', pwd: '' });
+        login.requesting = function (data) {
+            if (!data.name) {
+                alert('enter user name!');
+                return false;
+            }
+            if (!data.pwd) {
+                alert('enter user password!');
+                return false;
+            }
+            return true;
+        };
+        var addEmployee = new beetlexAction("/AddEmployee", { FirstName: '', LastName: '', City: '', Address: '' });
+        var listEmployee = new beetlexAction("/ListEmployees");
+        var customersSelect = new beetlexAction("/CustomersSelect");
+        var employeesSelect = new beetlexAction("/EmployeesSelect");
+        var listOrders = new beetlexAction("/ListOrders", { employeeid: 0, customerid: '' }, []);
         var page = new Vue({
             el: '#page',
             data: {
                 select: 'login',
-                login: logincmd,
-                addEmployee: addEmployeecmd,
-                listEmployee: listEmployeecmd,
-                customerSelects: customersSelectcmd,
-                employeeSelects: employeesSelectcmd,
-                listOrders: listOrderscmd
+                login: login,
+                addEmployee: addEmployee,
+                listEmployee: listEmployee,
+                customerSelects: customersSelect,
+                employeeSelects: employeesSelect,
+                listOrders: listOrders
             }
         });
         page.listEmployee.get();

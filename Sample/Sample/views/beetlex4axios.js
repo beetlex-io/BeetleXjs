@@ -7,8 +7,13 @@
         vars[hash[0].toLowerCase()] = hash[1];
     }
     this.queryString = vars;
+    this.tag = null;
     this.ssl = window.location.protocol == "https:"
     var url = document.location.pathname;
+    var tagIndex = document.location.href.indexOf('#');
+    if (tagIndex > 0) {
+        this.tag = document.location.href.substring(tagIndex + 1);
+    }
     this.folder = url.substring(url.indexOf('/'), url.lastIndexOf('/'));
     url = url.substring(0, (url.indexOf("#") == -1) ? url.length : url.indexOf("#"));
     url = url.substring(0, (url.indexOf("?") == -1) ? url.length : url.indexOf("?"));
@@ -18,6 +23,7 @@
         this.ext = this.fileName.substring(this.fileName.lastIndexOf(".") + 1, this.fileName.length)
         this.fileNameWithOutExt = this.fileName.substring(0, this.fileName.lastIndexOf(".") == -1 ? this.fileName.length : this.fileName.lastIndexOf("."));
     }
+    
 }
 
 var _url = new UrlHelper();
@@ -34,7 +40,7 @@ function beetlexWebSocket() {
     this.status = false;
     this.messagHandlers = new Object();
     this.timeout = 2000;
-    this.callback = null;
+    this.receive = null;
 }
 
 beetlexWebSocket.prototype.send = function (url, params, callback) {
@@ -71,8 +77,12 @@ beetlexWebSocket.prototype.onMessage = function (evt) {
     if (callback)
         callback(msg);
     else
-        if (this.callback)
-            this.callback(msg);
+        if (this.callback) {
+            if (msg.Data != null && msg.Data != undefined)
+                this.receive(msg.Data);
+            else
+                this.receive(msg);
+        }
 }
 
 beetlexWebSocket.prototype.onReceiveMessage = function (callback) {
@@ -173,7 +183,7 @@ beetlex4axios.prototype.get = function (url, params, callback) {
 beetlex4axios.prototype.onError = function (code, message) {
     var handler = this.getErrorHandler(code);
     if (handler)
-        handler(code, message);
+        handler(message);
     else
         alert(message);
 }
@@ -235,43 +245,46 @@ function beetlexAction(actionUrl, actionData, defaultResult) {
     this.url = actionUrl;
     this.data = actionData;
     this.result = defaultResult;
-    this.callback=null;
-    this.validate=null;
+    this.requesting = null;
+    this.requested = null;
 
 }
 
 beetlexAction.prototype.onCallback = function (data) {
-    if (this.callback)
-        this.callback(data);
+    if (this.requested)
+        this.requested(data);
 }
 
 beetlexAction.prototype.onValidate = function (data) {
-    if (this.validate)
-        return this.validate(data);
+    if (this.requesting)
+        return this.requesting(data);
     return true;
 }
 
-beetlexAction.prototype.get = function (callback) {
+beetlexAction.prototype.get = function (data) {
     var _this = this;
-    if (!this.onValidate(this.data))
+    var _postData = this.data;
+    if (data)
+        _postData = data;
+    if (!this.onValidate(_postData))
         return;
-    beetlex.get(this.url, this.data, function (r) {
+    beetlex.get(this.url, _postData, function (r) {
+
         _this.result = r;
         _this.onCallback(r);
-        if (callback)
-            callback(r);
     });
 };
 
-beetlexAction.prototype.post = function (callback) {
+beetlexAction.prototype.post = function (data) {
     var _this = this;
-    if (!this.onValidate(this.data))
+    var _postData = this.data;
+    if (data)
+        _postData = data;
+    if (!this.onValidate(_postData))
         return;
-    beetlex.post(this.url, this.data, function (r) {
+    beetlex.post(this.url, _postData, function (r) {
         _this.result = r;
         _this.onCallback(r);
-        if (callback)
-            callback(r);
     });
 
 };

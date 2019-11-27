@@ -4,6 +4,8 @@ using Microsoft.Extensions.Hosting;
 using System;
 using Northwind.Data;
 using System.Linq;
+using System.Collections.Generic;
+
 namespace Sample
 {
     [BeetleX.FastHttpApi.Controller]
@@ -11,12 +13,13 @@ namespace Sample
     {
         static void Main(string[] args)
         {
+            var list = new List<int>();
+            
             var builder = new HostBuilder()
               .ConfigureServices((hostContext, services) =>
               {
                   services.UseBeetlexHttp(o =>
                   {
-                      o.Port = 80;
                       o.LogToConsole = true;
                       o.SetDebug();
                       o.LogLevel = LogType.Warring;
@@ -43,17 +46,21 @@ namespace Sample
                    };
         }
 
-        public object ListOrders(int employeeid, string customerid)
-        {
-            return from a in DataHelper.Defalut.Orders
-                   where (employeeid == 0 || a.EmployeeID == employeeid) && (string.IsNullOrEmpty(customerid) || a.CustomerID == customerid)
-                   select a;
-        }
-
         public object EmployeesSelect()
         {
             return from a in DataHelper.Defalut.Employees select new { a.EmployeeID, Name = $"{a.FirstName} {a.LastName}" };
         }
+
+        public object ListOrders(int employeeid, string customerid)
+        {
+            return from a in DataHelper.Defalut.Orders
+                   where
+                   (employeeid == 0 || a.EmployeeID == employeeid) &&
+                   (string.IsNullOrEmpty(customerid) || a.CustomerID == customerid)
+                   select a;
+        }
+
+
 
         public object ListEmployees()
         {
