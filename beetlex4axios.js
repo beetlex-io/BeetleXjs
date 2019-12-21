@@ -41,6 +41,7 @@ function beetlexWebSocket() {
     this.messagHandlers = new Object();
     this.timeout = 2000;
     this.receive = null;
+    this.errorHandlers = new Object();
 }
 
 beetlexWebSocket.prototype.send = function (url, params, callback) {
@@ -63,7 +64,7 @@ beetlexWebSocket.prototype.onClose = function (evt) {
     var _this = this;
     if (evt.code == 1006) {
         setTimeout(function () {
-            _this.Connect();
+            _this.connect();
         }, _this.timeout);
         if (_this.timeout < 10000)
             _this.timeout += 1000;
@@ -76,13 +77,25 @@ beetlexWebSocket.prototype.onMessage = function (evt) {
     var callback = this.messagHandlers[msg.ID];
     if (callback)
         callback(msg);
-    else
+    else {
+        if (msg.Error) {
+            if (msg.Code) {
+                var c = this.errorHandlers[msg.Code];
+                if (c) {
+                    c(msg);
+                    return;
+                }
+            }
+            alert(msg.Error);
+            return;
+        }
         if (this.callback) {
             if (msg.Data != null && msg.Data != undefined)
                 this.receive(msg.Data);
             else
                 this.receive(msg);
         }
+    }
 }
 
 beetlexWebSocket.prototype.onReceiveMessage = function (callback) {
@@ -131,7 +144,7 @@ beetlex4axios.prototype.getRequestID = function () {
     return this._requestid;
 }
 
-beetlex4axios.prototype.get = function (url, params, callback) {
+beetlex4axios.prototype.get = function (url, params, callback, errorcallback) {
     var httpurl = url;
     if (!params)
         params = new Object();
@@ -141,7 +154,10 @@ beetlex4axios.prototype.get = function (url, params, callback) {
         var wscallback = function (r) {
             var data = r.Data;
             if (data.Code && data.Code != 200) {
-                _this.onError(data.Code, data.Error);
+                if (errorcallback)
+                    errorcallback(data.Code, data.Error)
+                else
+                    _this.onError(data.Code, data.Error);
             }
             else {
                 if (callback) {
@@ -159,7 +175,10 @@ beetlex4axios.prototype.get = function (url, params, callback) {
             .then(function (response) {
                 var data = response.data;
                 if (data.Code && data.Code != 200) {
-                    _this.onError(data.Code, data.Error);
+                    if (errorcallback)
+                        errorcallback(data.Code, data.Error)
+                    else
+                        _this.onError(data.Code, data.Error);
                 }
                 else {
                     if (callback) {
@@ -175,7 +194,10 @@ beetlex4axios.prototype.get = function (url, params, callback) {
                 var message = error.message;
                 if (error.response)
                     message += "\r\n" + error.response.data;
-                _this.onError(code, message);
+                if (errorcallback)
+                    errorcallback(code, message)
+                else
+                    _this.onError(code, message);
             });
     }
 };
@@ -188,7 +210,7 @@ beetlex4axios.prototype.onError = function (code, message) {
         alert(message);
 }
 
-beetlex4axios.prototype.post = function (url, params, callback) {
+beetlex4axios.prototype.post = function (url, params, callback,errorcallback) {
     var httpurl = url;
     if (!params)
         params = new Object();
@@ -200,7 +222,10 @@ beetlex4axios.prototype.post = function (url, params, callback) {
         var wscallback = function (r) {
             var data = r;
             if (data.Code && data.Code != 200) {
-                _this.onError(data.Code, data.Error);
+                if (errorcallback)
+                    errorcallback(data.Code, data.Error)
+                else
+                    _this.onError(data.Code, data.Error);
             }
             else {
                 if (callback) {
@@ -218,7 +243,10 @@ beetlex4axios.prototype.post = function (url, params, callback) {
             .then(function (response) {
                 var data = response.data;
                 if (data.Code && data.Code != 200) {
-                    _this.onError(data.Code, data.Error);
+                    if (errorcallback)
+                        errorcallback(data.Code, data.Error)
+                    else
+                        _this.onError(data.Code, data.Error);
                 }
                 else {
                     if (callback) {
@@ -234,7 +262,10 @@ beetlex4axios.prototype.post = function (url, params, callback) {
                 var message = error.message;
                 if (error.response)
                     message += "\r\n" + error.response.data;
-                _this.onError(code, message);
+                if (errorcallback)
+                    errorcallback(code, message)
+                else
+                    _this.onError(code, message);
             });
     }
 };
@@ -247,12 +278,13 @@ function beetlexAction(actionUrl, actionData, defaultResult) {
     this.result = defaultResult;
     this.requesting = null;
     this.requested = null;
-
+    this.token = null;
+    this.error = null;
 }
 
 beetlexAction.prototype.onCallback = function (data) {
     if (this.requested)
-        this.requested(data);
+        this.requested.call(this,data);
 }
 
 beetlexAction.prototype.onValidate = function (data) {
@@ -272,7 +304,7 @@ beetlexAction.prototype.get = function (data) {
 
         _this.result = r;
         _this.onCallback(r);
-    });
+    }, this.error);
 };
 
 beetlexAction.prototype.post = function (data) {
@@ -285,7 +317,7 @@ beetlexAction.prototype.post = function (data) {
     beetlex.post(this.url, _postData, function (r) {
         _this.result = r;
         _this.onCallback(r);
-    });
+    }, this.error);
 
 };
 
