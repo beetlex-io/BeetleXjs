@@ -42,6 +42,8 @@ function beetlexWebSocket() {
     this.timeout = 2000;
     this.receive = null;
     this.errorHandlers = new Object();
+    this.disconnect = null;
+    this.connected = null;
 }
 
 beetlexWebSocket.prototype.send = function (url, params, callback) {
@@ -57,11 +59,15 @@ beetlexWebSocket.prototype.send = function (url, params, callback) {
 
 beetlexWebSocket.prototype.onOpen = function (evt) {
     this.status = true;
+    if (this.connected)
+        this.connected();
 }
 
 beetlexWebSocket.prototype.onClose = function (evt) {
     this.status = false;
     var _this = this;
+    if (this.disconnect)
+        this.disconnect();
     if (evt.code == 1006) {
         setTimeout(function () {
             _this.connect();
@@ -101,6 +107,7 @@ beetlexWebSocket.prototype.onMessage = function (evt) {
 beetlexWebSocket.prototype.onReceiveMessage = function (callback) {
     this.callback = callback;
 };
+
 beetlexWebSocket.prototype.onError = function (evt) {
 
 }

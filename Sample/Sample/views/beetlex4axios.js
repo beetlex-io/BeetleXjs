@@ -88,6 +88,7 @@ beetlexWebSocket.prototype.onMessage = function (evt) {
 beetlexWebSocket.prototype.onReceiveMessage = function (callback) {
     this.callback = callback;
 };
+
 beetlexWebSocket.prototype.onError = function (evt) {
 
 }

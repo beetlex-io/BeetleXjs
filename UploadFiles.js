@@ -18,11 +18,8 @@ function readFileHandler(file, blockSize) {
     this.error = null;
     this.data = null;
     this.onload = null;
+    this.lastReadBytes = 0;
 }
-
-readFileHandler.prototype.completed = function () {
-    return this.pages == this.index;
-};
 
 readFileHandler.prototype.read = function () {
     var _this = this;
@@ -54,12 +51,22 @@ readFileHandler.prototype.read = function () {
     };
     var start = _this.index * _this.blockSize;
     var end = start + length;
-    _this.index++;
-    _this.readBytes += length;
+    //_this.index++;
+    //_this.readBytes += length;
+    _this.lastReadBytes = length;
     var blob = _this.file.slice(start, end);
     _this.reader.readAsArrayBuffer(blob);
+
+};
+
+readFileHandler.prototype.completed = function () {
+    this.index++;
+    this.readBytes += this.lastReadBytes;
+    this.lastReadBytes = 0;
     var p = this.index / this.pages * 100;
     this.percent = parseInt(p);
+   // console.log(this.index + "|" + this.pages + (this.index == this.pages));
+    return this.index == this.pages;
 };
 
 readFileHandler.prototype.toBase64 = function (buffer) {
@@ -72,55 +79,75 @@ readFileHandler.prototype.toBase64 = function (buffer) {
     return window.btoa(binary);
 };
 
-function FileUpload(url) {
+function UploadFiles(url,blockSize) {
     this.action = new beetlexAction(url);
     this.completed = null;
     this.items = [];
     this.index = 0;
     this.status = false;
     this.blockSize = 1024 * 16;
+    if (blockSize)
+        this.blockSize = blockSize;
     var _this = this;
     this.action.requested = function () {
-        console.log(this.token);
-        if (!this.token.completed()) {
+        //console.log("--" + this.token.index + "|" + this.token.pages + (status));
+        var status = this.token.completed();
+       
+        if (!status) {
             this.token.read();
         }
         else {
+            _this.index++;
             if (_this.completed)
                 _this.completed(this.token);
-            if (_this.index < _this.items.length) {
-                _this.execute();
-            }
-            else {
-                _this.status = false;
-            }
+            _this.upload();
         }
     };
 }
-FileUpload.prototype.execute = function () {
-    this.status = true;
-    var _this = this;
-    var item = this.items[this.index];
-    this.index++;
-    this.action.token = item;
-    item.onload = function () {
-        _this.action.post(
-            {
-                name: this.name,
-                data: this.data,
-                completed: this.completed(),
-                index: this.index - 1,
-                buffersize: this.blockSize,
-                filesize: this.file.size,
-            });
-    };
-    item.read();
+
+UploadFiles.prototype.clear = function () {
+    this.status = false;
+    this.items = [];
+    this.index = 0;
 }
-FileUpload.prototype.upload = function (file) {
+
+UploadFiles.prototype.upload = function () {
+    var _this = this;
+    if (_this.index < _this.items.length) {
+        _this.status = true;
+        var item = this.items[this.index];
+        this.action.token = item;
+        item.onload = function () {
+            _this.action.post(
+                {
+                    name: this.name,
+                    data: this.data,
+                    completed: (this.index + 1) == this.pages,
+                    index: this.index,
+                    buffersize: this.blockSize,
+                    filesize: this.file.size,
+                });
+        };
+        item.read();
+    }
+    else {
+        _this.status = false;
+    }
+
+}
+
+UploadFiles.prototype.add = function (file) {
     var reader = new readFileHandler(file, this.blockSize);
     this.items.push(reader);
     if (this.status == false) {
-        this.execute();
+        this.upload();
+    }
+}
+UploadFiles.prototype.addmulti = function (files) {
+    if (files && files.length > 0) {
+        for (i = 0; i < files.length; i++) {
+            this.add(files[i]);
+        }
     }
 }
 
