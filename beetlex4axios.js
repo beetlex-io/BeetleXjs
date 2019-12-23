@@ -23,7 +23,7 @@
         this.ext = this.fileName.substring(this.fileName.lastIndexOf(".") + 1, this.fileName.length)
         this.fileNameWithOutExt = this.fileName.substring(0, this.fileName.lastIndexOf(".") == -1 ? this.fileName.length : this.fileName.lastIndexOf("."));
     }
-    
+
 }
 
 var _url = new UrlHelper();
@@ -44,6 +44,10 @@ function beetlexWebSocket() {
     this.errorHandlers = new Object();
     this.disconnect = null;
     this.connected = null;
+}
+
+beetlexWebSocket.prototype.sendText = function (text) {
+    this.websocket.send(text);
 }
 
 beetlexWebSocket.prototype.send = function (url, params, callback) {
@@ -95,12 +99,12 @@ beetlexWebSocket.prototype.onMessage = function (evt) {
             alert(msg.Error);
             return;
         }
-        if (this.callback) {
-            if (msg.Data != null && msg.Data != undefined)
-                this.receive(msg.Data);
-            else
-                this.receive(msg);
-        }
+
+        if (msg.Data != null && msg.Data != undefined)
+            this.receive(msg.Data);
+        else
+            this.receive(msg);
+
     }
 }
 
@@ -217,7 +221,7 @@ beetlex4axios.prototype.onError = function (code, message) {
         alert(message);
 }
 
-beetlex4axios.prototype.post = function (url, params, callback,errorcallback) {
+beetlex4axios.prototype.post = function (url, params, callback, errorcallback) {
     var httpurl = url;
     if (!params)
         params = new Object();
@@ -291,7 +295,7 @@ function beetlexAction(actionUrl, actionData, defaultResult) {
 
 beetlexAction.prototype.onCallback = function (data) {
     if (this.requested)
-        this.requested.call(this,data);
+        this.requested.call(this, data);
 }
 
 beetlexAction.prototype.onValidate = function (data) {
