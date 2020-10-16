@@ -118,6 +118,7 @@ function beetlex4axios() {
     this.websocket = new beetlexWebSocket();
     this.loading = 0;
     this.error = null;
+
 }
 
 beetlex4axios.prototype.useWebsocket = function (host) {
@@ -183,8 +184,11 @@ beetlex4axios.prototype.get = function (handler, url, params, callback) {
         this.websocket.send(url, params, wscallback);
     }
     else {
-        axios.get(httpurl, { params: params, headers: { 'Content-Type': 'application/json;charset=UTF-8' } })
+        var headers = handler.headers;
+        headers['Content-Type'] = 'application/json;charset=UTF-8'
+        axios.get(httpurl, { params: params, headers: headers })
             .then(function (response) {
+                console.log("axios get success", response);
                 _this.completed();
                 handler.loading = false;
                 var data = response.data;
@@ -205,12 +209,15 @@ beetlex4axios.prototype.get = function (handler, url, params, callback) {
                 }
             })
             .catch(function (error) {
+                console.log("axios get error", error, error.response);
                 _this.completed();
                 handler.loading = false;
                 var code = error.response ? error.response.status : 500;
-                var message = error.message;
-                if (error.response)
+                var message = error;
+                if (error.response.data)
                     message = error.response.data;
+                else
+                    message = error.response.statusText;
                 _this.onError(code, message);
                 if (handler.error) {
                     handler.error({ code: code, error: message });
@@ -231,7 +238,50 @@ beetlex4axios.prototype.onError = function (code, message) {
             alert(message);
     }
 }
-
+beetlex4axios.prototype.put = function (handler, url, data, callback) {
+    handler.loading = true;
+    var _this = this;
+    var headers = handler.headers;
+    console.log("axios put", url, data);
+    axios.put(url, data, { headers: headers })
+        .then(function (response) {
+            console.log("axios put success", response);
+            _this.completed();
+            handler.loading = false;
+            var data = response.data;
+            if (data.Code && data.Code != 200) {
+                _this.onError(data.Code, data.Error);
+                if (handler.error) {
+                    handler.error({ code: data.Code, error: data.Error });
+                    handler.error = null;
+                }
+            }
+            else {
+                if (callback) {
+                    if (data.Data === undefined)
+                        callback(data);
+                    else
+                        callback(data.Data);
+                }
+            }
+        })
+        .catch(function (error) {
+            console.log("axios post error", error);
+            _this.completed();
+            handler.loading = false;
+            var code = error.response ? error.response.status : 500;
+            var message = error.message;
+            if (error.response.data)
+                message = error.response.data;
+            else
+                message = error.response.statusText;
+            _this.onError(code, message);
+            if (handler.error) {
+                handler.error({ code: code, error: message });
+                handler.error = null;
+            }
+        });
+}
 beetlex4axios.prototype.post = function (handler, url, params, callback) {
     handler.loading = true;
     var httpurl = url;
@@ -265,8 +315,11 @@ beetlex4axios.prototype.post = function (handler, url, params, callback) {
         this.websocket.send(url, params, wscallback);
     }
     else {
-        axios.post(httpurl, JSON.stringify(params), { headers: { 'Content-Type': 'application/json;charset=UTF-8' } })
+        var headers = handler.headers;
+        headers['Content-Type'] = 'application/json;charset=UTF-8'
+        axios.post(httpurl, JSON.stringify(params), { headers: headers })
             .then(function (response) {
+                console.log("axios post success", response);
                 _this.completed();
                 handler.loading = false;
                 var data = response.data;
@@ -287,12 +340,15 @@ beetlex4axios.prototype.post = function (handler, url, params, callback) {
                 }
             })
             .catch(function (error) {
+                console.log("axios post error", error);
                 _this.completed();
                 handler.loading = false;
                 var code = error.response ? error.response.status : 500;
                 var message = error.message;
-                if (error.response)
+                if (error.response.data)
                     message = error.response.data;
+                else
+                    message = error.response.statusText;
                 _this.onError(code, message);
                 if (handler.error) {
                     handler.error({ code: code, error: message });
@@ -314,6 +370,7 @@ function beetlexAction(actionUrl, actionData, defaultResult) {
     this.http = false;
     this.token = null;
     this.error = null;
+    this.headers = {};
 }
 
 beetlexAction.prototype.userHttp = function () {
@@ -349,7 +406,21 @@ beetlexAction.prototype.get = function (data) {
     if (!this.onValidate(_postData))
         return;
     beetlex.get(this, this.url, _postData, function (r) {
-
+        _this.result = r;
+        _this.onCallback(r);
+    });
+};
+beetlexAction.prototype.asyncput = function (data) {
+    var result = new Promise((resolve, error) => {
+        this.requested = resolve;
+        this.error = error;
+        this.put(data);
+    });
+    return result;
+}
+beetlexAction.prototype.put = function (data) {
+    var _this = this;
+    beetlex.put(this, this.url, data, function (r) {
         _this.result = r;
         _this.onCallback(r);
     });
@@ -378,22 +449,23 @@ beetlexAction.prototype.post = function (data) {
 
 };
 //timer
-var __timers = [];
+var __app__timers = [];
 
-var __timeCount = 0;
+var __app__timeCount = 0;
 
-__addTimer = function (callback) {
-    __timers.push(callback);
+__addTimerHandler = function (callback) {
+    __app__timers.push(callback);
 };
+
 __runTimer = function () {
     try {
-        __timeCount++;
-        __timers.forEach((v) => {
-            v(__timeCount);
+        __app__timeCount++;
+        __app__timers.forEach((v) => {
+            v(__app__timeCount);
         });
     }
     catch (err) {
-        console.log("run timer error",err);
+        console.log("run timer error", err);
     }
 };
 setInterval(__runTimer, 1000);
