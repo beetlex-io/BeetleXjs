@@ -1,97 +1,92 @@
 ﻿<div :style="gridStyle" :class="gridClass">
-    <div style="height:100%">
-        <el-table :data="gridData"
-                  style="width: 100%;"
-                  height="100%"
-                  @selection-change="selectionChange" :size="gridSize">
-            <el-table-column v-if="gridSelection" type="selection"
-                             width="45">
-            </el-table-column>
+    <el-table :data="gridData"
+              style="width: 100%;"
+              :height="gridHeight"
+              @selection-change="selectionChange" :size="gridSize">
+        <el-table-column v-if="gridSelection" type="selection"
+                         width="45">
+        </el-table-column>
 
-            <el-table-column v-for="col in gridColumns"
-                             :label="col.label?col.label:col.name"
-                             :width="getWidth(col)">
-                <template slot-scope="item">
-                    <div v-if="gridEdit && !col.readonly && item.row._editor==true">
-                        <el-input-number v-if="col.type=='number'" v-model="item.row[col.name]" :min="-9999999" :max="9999999" style="width: 100%;" :size="gridSize">
-                        </el-input-number>
+        <el-table-column v-for="col in gridColumns"
+                         :label="(col.label=='null'?'':(col.label?col.label:col.name))"
+                         :width="col.width">
+            <template slot-scope="item">
+                <div v-if="gridEdit && !col.readonly && item.row._editor==true">
+                    <el-input-number v-if="col.type=='number'" v-model="item.row[col.name]" :min="-9999999" :max="9999999" style="width: 100%;" :size="gridSize">
+                    </el-input-number>
 
-                        <el-link v-else-if="col.type=='link'" type="primary" @click="onCommand(item.row,col.name)">{{item.row[col.name]?item.row[col.name]:col.value}}</el-link>
+                    <el-link v-else-if="col.type=='link'" type="primary" @click="onCommand(item.row,col.name)">{{item.row[col.name]?item.row[col.name]:col.value}}</el-link>
 
-                        <el-date-picker v-else-if="col.type=='date'" v-model="item.row[col.name]"
-                                        align="left"
-                                        type="date" style="width: 100%;" :size="gridSize">
-                        </el-date-picker>
+                    <el-date-picker v-else-if="col.type=='date'" v-model="item.row[col.name]"
+                                    align="left"
+                                    type="date" style="width: 100%;" :size="gridSize">
+                    </el-date-picker>
 
-                        <el-time-picker v-else-if="col.type=='time'" v-model="item.row[col.name]" style="width: 100%;" :size="gridSize">
-                        </el-time-picker>
+                    <el-time-picker v-else-if="col.type=='time'" v-model="item.row[col.name]" style="width: 100%;" :size="gridSize">
+                    </el-time-picker>
 
-                        <el-select v-else-if="col.type=='select'" v-model="item.row[col.name]" style="width: 100%;" :size="gridSize">
-                            <el-option v-if="col.data && col.nulloption==true">无选择</el-option>
-                            <el-option v-if="col.data" v-for="sitem in col.data" :label="sitem.label?sitem.label:sitem.value" :value="sitem.value"></el-option>
-                        </el-select>
+                    <el-select v-else-if="col.type=='select'" v-model="item.row[col.name]" style="width: 100%;" :size="gridSize">
+                        <el-option v-if="col.data && col.nulloption==true">无</el-option>
+                        <el-option v-if="col.data" v-for="sitem in col.data" :label="sitem.label?sitem.label:sitem.value" :value="sitem.value"></el-option>
+                    </el-select>
 
-                        <el-radio-group v-else-if="col.type=='radio'" v-model="item.row[col.name]" :size="gridSize">
-                            <el-radio v-if="col.data" v-for="sitem in col.data" :label="sitem.value">{{sitem.label?sitem.label:sitem.value}}</el-radio>
-                        </el-radio-group>
+                    <el-radio-group v-else-if="col.type=='radio'" v-model="item.row[col.name]" :size="gridSize">
+                        <el-radio v-if="col.data" v-for="sitem in col.data" :label="sitem.value">{{sitem.label?sitem.label:sitem.value}}</el-radio>
+                    </el-radio-group>
 
-                        <el-checkbox-group v-else-if="col.type=='checkbox'" v-model="item.row[col.name]" :size="gridSize">
-                            <el-checkbox v-if="col.data" v-for="sitem in col.data" :label="sitem.value">{{sitem.label?sitem.label:sitem.value}}</el-checkbox>
-                        </el-checkbox-group>
+                    <el-checkbox-group v-else-if="col.type=='checkbox'" v-model="item.row[col.name]" :size="gridSize">
+                        <el-checkbox v-if="col.data" v-for="sitem in col.data" :label="sitem.value">{{sitem.label?sitem.label:sitem.value}}</el-checkbox>
+                    </el-checkbox-group>
 
-                        <el-switch v-else-if="col.type=='switch'" v-model="item.row[col.name]" :size="gridSize"></el-switch>
+                    <el-switch v-else-if="col.type=='switch'" v-model="item.row[col.name]" :size="gridSize"></el-switch>
 
-                        <el-input v-else-if="col.type=='remark'" v-model="item.row[col.name]" type="textarea" :row="col.row?col.row:3" :size="gridSize"></el-input>
+                    <el-input v-else-if="col.type=='remark'" v-model="item.row[col.name]" type="textarea" :row="col.row?col.row:3" :size="gridSize"></el-input>
 
-                        <el-rate v-else-if="col.type=='rate'" v-model="item.row[col.name]"></el-rate>
-                        <div v-else-if="col.type=='img'" style="display:contents">
-                            <img :style="{height:col.height?col.height:'100%'}" :src="item.row[col.name]?item.row[col.name]:col.value" />
-                            <auto-uploadimg :title="col.label" :size="gridSize" :url="col.uploadurl" :fileSize="col.filesize" v-model="item.row[col.name]"></auto-uploadimg>
-                        </div>
-                        <auto-password v-else-if="col.type=='setpassword'" v-model="item.row[col.name]" :type="col.pwdtype" :size="gridSize" @completed="onCommand(item.row,col.name)">
-
-                        </auto-password>
-                        <el-button :size="gridSize" v-else-if="col.type=='viewpassword'" icon="el-icon-view" :title="item.row[col.name]?item.row[col.name]:'无'" circle></el-button>
-
-                        <el-input v-else v-model="item.row[col.name]" :size="gridSize"></el-input>
+                    <el-rate v-else-if="col.type=='rate'" v-model="item.row[col.name]"></el-rate>
+                    <div v-else-if="col.type=='img'" style="display:contents">
+                        <img :style="{height:col.height?col.height:'100%'}" :src="item.row[col.name]?item.row[col.name]:col.value" />
+                        <auto-uploadimg :title="col.label" :size="gridSize" :url="col.uploadurl" :fileSize="col.filesize" v-model="item.row[col.name]"></auto-uploadimg>
                     </div>
-                    <div v-else>
-                        <el-link v-if="col.type=='link'" type="primary" @click="onCommand(item.row,col.name)">{{item.row[col.name]?item.row[col.name]:col.value}}</el-link>
-                        <el-button :size="gridSize" v-else-if="col.type=='viewpassword'" icon="el-icon-view" :title="item.row[col.name]?item.row[col.name]:'无'" circle></el-button>
-                        <img v-else-if="col.type=='img'" :style="{height:col.height?col.height:'100%'}" :src="item.row[col.name]?item.row[col.name]:col.value" />
-                        <el-rate v-else-if="col.type=='rate'" v-model="item.row[col.name]" disabled show-score></el-rate>
-                        <el-switch v-else-if="col.type=='switch'" v-model="item.row[col.name]"
-                                   disabled>
-                        </el-switch>
-                        <auto-password v-else-if="col.type=='setpassword'" v-model="item.row[col.name]" :type="col.pwdtype" :size="gridSize" @completed="onCommand(item.row,col.name)">
+                    <auto-password v-else-if="col.type=='setpassword'" v-model="item.row[col.name]" :type="col.pwdtype" :size="gridSize" @completed="onCommand(item.row,col.name)">
 
-                        </auto-password>
-                        <div v-else-if="col.type=='html'" v-html="item.row[col.name]">
+                    </auto-password>
+                    <el-button :size="gridSize" v-else-if="col.type=='viewpassword'" icon="el-icon-view" :title="item.row[col.name]?item.row[col.name]:'无'" circle></el-button>
+                    <el-button :size="gridSize" :title="col.title" v-else-if="col.type=='button'" :icon="col.icon" circle @click="onCommand(item.row,col.name)"></el-button>
+                    <el-input v-else v-model="item.row[col.name]" :size="gridSize"></el-input>
+                </div>
+                <div v-else>
+                    <el-link v-if="col.type=='link'" @click="onCommand(item.row,col.name)">{{item.row[col.name]?item.row[col.name]:col.value}}</el-link>
+                    <el-button :size="gridSize" v-else-if="col.type=='viewpassword'" icon="el-icon-view" :title="item.row[col.name]?item.row[col.name]:'无'" circle></el-button>
+                    <img v-else-if="col.type=='img'" :style="{height:col.height?col.height:'100%'}" :src="item.row[col.name]?item.row[col.name]:col.value" />
+                    <el-rate v-else-if="col.type=='rate'" v-model="item.row[col.name]" disabled show-score></el-rate>
+                    <el-switch v-else-if="col.type=='switch' && (!col.edit||item.row._readonly)" v-model="item.row[col.name]" disabled>
+                    </el-switch>
+                    <el-switch v-else-if="col.type=='switch' && col.edit==true && !item.row._readonly" v-model="item.row[col.name]" @change="onCommand(item.row,col.name)">
+                    </el-switch>
+                    <el-button :size="gridSize" :title="col.title" v-else-if="col.type=='button'" :icon="col.icon" circle @click="onCommand(item.row,col.name)"></el-button>
+                    <auto-password v-else-if="col.type=='setpassword'" v-model="item.row[col.name]" :type="col.pwdtype" :size="gridSize" @completed="onCommand(item.row,col.name)">
 
-                        </div>
-                        <span v-else> {{getViewValue(item.row[col.name],col.data)}}</span>
+                    </auto-password>
+                    <div v-else-if="col.type=='html'" v-html="item.row[col.name]">
+
                     </div>
-                </template>
-            </el-table-column>
+                    <span v-else> {{getViewValue(item.row[col.name],col.data)}}</span>
+                </div>
+            </template>
+        </el-table-column>
 
-            <el-table-column align="right">
-                <template slot-scope="item">
-                    <el-button v-if="item.row._editor==true && gridEdit==true" icon="el-icon-refresh-right" type="info" :size="gridSize" circle @click="item.row._editor=false;onRefresh()"></el-button>
-                    <el-button v-if="item.row._editor==false && gridEdit==true" type="info" :size="gridSize" icon="el-icon-edit" circle @click="onEdit(item.row)"></el-button>
-                    <el-button v-if="item.row._editor==true && gridEdit==true" type="info" :size="gridSize" icon="el-icon-check" circle @click="onItemChange(item.row)"></el-button>
+        <el-table-column align="right" width="120">
+            <template slot-scope="item">
+                <el-button style="padding:6px;" v-if="item.row._editor==true && gridEdit==true && !item.row._readonly" icon="el-icon-refresh-right" :size="gridSize" circle @click="item.row._editor=false;onRefresh()"></el-button>
+                <el-button style="padding:6px;" v-if="item.row._editor==false && gridEdit==true && !item.row._readonly" :size="gridSize" icon="el-icon-edit" circle @click="onEdit(item.row)"></el-button>
+                <el-button style="padding:6px;" v-if="item.row._editor==true && gridEdit==true && !item.row._readonly" :size="gridSize" icon="el-icon-check" circle @click="onItemChange(item.row)"></el-button>
 
-                    <el-button v-if="gridDelete" :size="gridSize" type="danger" icon="el-icon-delete" circle @click="onItemDelete(item.row)"></el-button>
-                </template>
-            </el-table-column>
+                <el-button style="padding:6px;" v-if="gridDelete && !item.row._readonly" :size="gridSize" icon="el-icon-delete" circle @click="onItemDelete(item.row)"></el-button>
+            </template>
+        </el-table-column>
 
-        </el-table>
-    </div>
-    <div style="text-align:right;">
-        <el-pagination v-if="gridPages>1" layout="prev, pager, next" @current-change="onCurrentChange"
-                       :page-size="1"
-                       :total="gridPages" :current-page="gridCurrentpage">
-        </el-pagination>
-    </div>
+    </el-table>
+
 </div>
 <script>
     {
@@ -100,7 +95,7 @@
             return {
                 gridColumns: this.columns ? this.columns : [],
                 gridData: [],
-                gridHeight: this.height ? this.height : '',
+                gridHeight: this.height ? this.height : null,
                 gridSelection: this.selection,
                 gridDelete: this.delete,
                 gridEdit: this.edit,
@@ -133,7 +128,7 @@
             getWidth(item){
                 if (item.width)
                     return item.width;
-                return '';
+                return null;
             },
             getViewValue(value, data){
                 var result = value;

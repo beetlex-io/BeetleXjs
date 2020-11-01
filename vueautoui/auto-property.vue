@@ -1,8 +1,8 @@
 ﻿
 
-<el-form-item v-if="info.readonly==true" :label="info.label?info.label:info.name">
+<el-form-item v-if="info.readonly==true" :label="info.label?info.label:info.name" :style="style">
     <el-input :value="model.value"
-              :disabled="true" :style="{width:info.width+'px'}" >
+              :disabled="true" :style="{width:info.width+'px'}" :placeholder="info.placeholder">
     </el-input>
 </el-form-item>
 
@@ -11,38 +11,40 @@
 </el-form-item>
 
 <el-form-item v-else-if="info.type=='link'" :label="info.label?info.label:info.name">
-    <el-link type="primary" @click="onCommand">{{model.value}}</el-link>
+    <el-link @click="onCommand">{{model.value}}</el-link>
 </el-form-item>
 
-<el-form-item v-else-if="info.type=='button'">
-    <el-button type="primary" plain @click="onCommand">{{model.value?model.value:info.label}}</el-button>
+<el-form-item v-else-if="info.type=='button'"  label-width="0" >
+    <el-button style="float:right;padding-left:10px;padding-right:10px;" plain @click="onCommand">{{model.value?model.value:info.label}}</el-button>
 </el-form-item>
 
-<el-form-item v-else-if="info.type=='iconbutton'">
-    <el-button type="info" :icon="info.icon" circle @click="onCommand"></el-button>
+<el-form-item v-else-if="info.type=='iconbutton'" label-width="0" >
+
+    <el-button style="float:right;padding-left:10px;padding-right:10px;" v-if="info.label" type="info" :icon="info.icon" @click="onCommand"><span style="margin-left:4px;">{{info.label}}</span></el-button>
+    <el-button v-else style="float:right;padding-left:10px;padding-right:10px;" type="info" :icon="info.icon" circle @click="onCommand"></el-button>
 </el-form-item>
 
 <el-form-item v-else-if="info.type=='number'" :label="info.label?info.label:info.name" :prop="'items.'+info.index+'.value'" :rules="rules">
-    <el-input-number v-model="model.value" :min="-99999999" :max="99999999" @change="updateValue" :style="{width:info.width}"></el-input-number>
+    <el-input-number :placeholder="info.placeholder" v-model="model.value" :min="-99999999999" :max="99999999999" @change="updateValue" :style="{width:info.width}"></el-input-number>
 </el-form-item>
 
 <el-form-item v-else-if="info.type=='date'" :label="info.label?info.label:info.name" :prop="'items.'+info.index+'.value'" :rules="rules">
-    <el-date-picker v-model="model.value"
+    <el-date-picker :placeholder="info.placeholder" v-model="model.value"
                     align="left"
                     type="date" @change="updateValue" :style="{width:info.width}">
     </el-date-picker>
 </el-form-item>
 
 <el-form-item v-else-if="info.type=='time'" :label="info.label?info.label:info.name" :prop="'items.'+info.index+'.value'" :rules="rules">
-    <el-time-picker v-model="model.value" :style="{width:info.width}" @change="updateValue">
+    <el-time-picker :placeholder="info.placeholder" v-model="model.value" :style="{width:info.width}" @change="updateValue">
     </el-time-picker>
 </el-form-item>
 
 
 <el-form-item v-else-if="info.type=='select'" :label="info.label?info.label:info.name" :prop="'items.'+info.index+'.value'" :rules="rules">
-    <el-select v-model="model.value" :style="{width:info.width}" @change="updateValue">
-        <el-option v-if="item.data && item.nulloption==true">无选择</el-option>
-        <el-option v-if="item.data" v-for="sitem in info.data" :label="sitem.label?sitem.label:sitem.value" :value="sitem.value"></el-option>
+    <el-select :placeholder="info.placeholder" v-model="model.value" :style="{width:info.width}" @change="updateValue">
+        <el-option v-if="item.data && item.nulloption==true">无</el-option>
+        <el-option v-if="item.data" v-for="sitem in info.data" :label="sitem.label?sitem.label:sitem.value" :value="sitem.value" :key="sitem.value"></el-option>
     </el-select>
 </el-form-item>
 
@@ -54,7 +56,7 @@
 
 <el-form-item v-else-if="info.type=='checkbox'" :label="info.label?info.label:info.namel" :prop="'items.'+info.index+'.value'" :rules="rules">
     <el-checkbox-group v-model="model.value" @change="updateValue">
-        <el-checkbox v-if="info.data" v-for="sitem in info.data" :label="sitem.value">{{sitem.label?sitem.label:sitem.value}}</el-checkbox>
+        <el-checkbox v-if="info.data" v-for="sitem in info.data" :label="sitem.value" :key="sitem.value">{{sitem.label?sitem.label:sitem.value}}</el-checkbox>
     </el-checkbox-group>
 </el-form-item>
 
@@ -63,11 +65,11 @@
 </el-form-item>
 
 <el-form-item v-else-if="info.type=='password'" :label="info.label?info.label:info.name" :prop="'items.'+info.index+'.value'" :rules="rules">
-    <el-input v-model="model.value" :style="{width:info.width}" show-password @change="updateValue"></el-input>
+    <el-input :placeholder="info.placeholder" v-model="model.value" :style="{width:info.width}" show-password @change="updateValue"></el-input>
 </el-form-item>
 
 <el-form-item v-else-if="info.type=='remark'" :label="info.label?info.label:info.name" :prop="'items.'+info.index+'.value'" :rules="rules">
-    <el-input v-model="model.value" :style="{width:info.width}" type="textarea" @change="updateValue" :rows="info.row?info.row:3"></el-input>
+    <el-input :placeholder="info.placeholder" v-model="model.value" :style="{width:info.width}" type="textarea" @change="updateValue" :rows="info.row?info.row:3"></el-input>
 </el-form-item>
 
 <el-form-item v-else-if="info.type=='setpassword'" :label="info.label?info.label:info.name" :prop="'items.'+info.index+'.value'" :rules="rules">
@@ -78,6 +80,10 @@
 
 <el-form-item v-else-if="info.type=='rate'" :label="info.label?info.label:info.name" :prop="'items.'+info.index+'.value'" :rules="rules">
     <el-rate v-model="model.value" @change="updateValue"></el-rate>
+</el-form-item>
+
+<el-form-item v-else-if="info.type=='space'" label="">
+
 </el-form-item>
 
 <el-form-item v-else-if="info.type=='upload'" :label="info.label?info.label:info.name" :prop="'items.'+info.index+'.value'" :rules="rules">
@@ -113,13 +119,21 @@
     <el-color-picker v-model="model.value" @change="updateValue"></el-color-picker>
 </el-form-item>
 
+<el-form-item v-else-if="info.type=='input-select'" :label="info.label?info.label:info.name" :prop="'items.'+info.index+'.value'" :rules="rules">
+    <el-input :placeholder="info.placeholder"  v-model="model.value" class="input-with-select" :style="{width:info.width}" @change="updateValue">
+        <el-select v-model="model.value" slot="prepend" @change="updateValue" :placeholder="info.placeholder">
+            <el-option v-if="info.data" v-for="sitem in info.data" :label="sitem.label?sitem.label:sitem.value" :value="sitem.value"></el-option>
+        </el-select>
+    </el-input>
+</el-form-item>
+
 <el-form-item v-else :label="info.label?info.label:info.name" :prop="'items.'+info.index+'.value'" :rules="rules">
-    <el-input :style="{width:info.width}" v-model="model.value" @change="updateValue"></el-input>
+    <el-input :placeholder="info.placeholder" :style="{width:info.width}" v-model="model.value" @change="updateValue"></el-input>
 </el-form-item>
 
 <script>
     {
-        props: ["item", "value"],
+        props: ["item", "value","style"],
             model: {
             prop: 'value',
                 event: 'change',

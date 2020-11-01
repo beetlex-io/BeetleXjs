@@ -1,13 +1,13 @@
-﻿<div :style="formStyle" :class="formClass">
+﻿<div>
 
-    <el-form v-if="rows.length==1" :inline="true" :size="size" :label-width="rows.labelwidth+'px'" :model="data" ref="customForm">
+    <el-form :style="formStyle" :class="formClass" v-if="rows.length==1" :inline="true" :size="size" :label-width="rows.labelwidth+'px'" :model="data" ref="customForm">
         <auto-property v-for="(item,col) in rows[0]" v-if="!item.hide" v-model="item.value" :item="item" @valuechange="valueChange" @command="onCommand">
         </auto-property>
     </el-form>
 
-    <el-form v-else :size="size" :label-width="labelwidth+'px'" :model="data" ref="customForm">
+    <el-form v-else :size="size" :label-width="labelwidth+'px'" :model="data" ref="customForm" :style="formStyle" :class="formClass">
         <el-row v-for="row in rows">
-            <el-col v-for="(item,col) in row" v-if="!item.hide" :span="onGetWidth(col+1,row.length)">
+            <el-col v-for="(item,col) in row" v-if="!item.hide" :span="onGetWidth(col+1,item,row)">
                 <div class="grid-content bg-purple">
                     <auto-property v-model="item.value" :item="item" @valuechange="valueChange" @command="onCommand">
 
@@ -36,11 +36,19 @@
                 event: 'change',
         },
         methods: {
-            onGetWidth(col, count){
-                var width = parseInt(23 / count);
-                if (col == (count)) {
-                    return 23 - (width * (count - 1))
-                }
+            onGetWidth(col, item, row){
+                if (row.length == 1)
+                    return 24;
+                var max = 24;
+                var buttons = 0;
+                if (item.type.indexOf('button') >= 0)
+                    return 2;
+                row.forEach(v => {
+                    if (v.type.indexOf('button') >= 0)
+                        buttons++;
+                });
+                max = max - buttons*2;
+                var width = parseInt(max / (row.length - buttons));
                 return width;
 
             },
@@ -53,7 +61,7 @@
             },
             onCommand(e){
                 e.data = this.getData();
-                
+
                 var success;
                 this.$refs['customForm'].validate((valid) => {
                     success = valid;
@@ -170,7 +178,7 @@
             },
             loadData(url){
                 if (url && beetlex) {
-                    var getDetail = new beetlexAction('/__apidoc/GetApiDetail');
+                    var getDetail = new beetlexAction('/beetlex/apidoc/GetApiDetail');
                     getDetail.requested = (r) => {
                         this.column = r.col;
                         this.labelwidth = r.labelwidth;
